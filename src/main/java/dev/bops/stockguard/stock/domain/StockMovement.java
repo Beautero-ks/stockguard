@@ -40,7 +40,7 @@ public class StockMovement {
     }
 
     // Constructeur pour une SORTIE de stock (un seul N° de série)
-    private StockMovement(UUID productId, UUID userId, String reason, SerialNumber serialNumber) {
+    private StockMovement(UUID productId, UUID userId, String reason, SerialNumber serialNumber, UUID clientId) {
         Preconditions.checkArgument(productId != null, "Produit obligatoire");
         Preconditions.checkArgument(userId != null, "Utilisateur obligatoire");
         Preconditions.checkArgument(serialNumber != null, "N° de série obligatoire");
@@ -56,7 +56,7 @@ public class StockMovement {
         this.createdAt = Instant.now();
 
         // Appel du comportement métier sur le SerialNumber
-        serialNumber.markAsSold(this.id);
+        serialNumber.markAsSold(this.id, clientId);
     }
 
     // Reconstruction depuis la persistance
@@ -79,7 +79,11 @@ public class StockMovement {
     }
 
     public static StockMovement createExit(UUID productId, UUID userId, String reason, SerialNumber serialNumber) {
-        return new StockMovement(productId, userId, reason, serialNumber);
+        return createExit(productId, userId, reason, serialNumber, null);
+    }
+
+    public static StockMovement createExit(UUID productId, UUID userId, String reason, SerialNumber serialNumber, UUID clientId) {
+        return new StockMovement(productId, userId, reason, serialNumber, clientId);
     }
 
     public enum MovementType {

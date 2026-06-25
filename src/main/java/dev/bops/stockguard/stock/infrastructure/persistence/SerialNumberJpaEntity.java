@@ -36,20 +36,23 @@ class SerialNumberJpaEntity {
     @Column(name = "exit_movement_id")
     private UUID exitMovementId;
 
+    @Column(name = "client_id")
+    private UUID clientId;
+
     @Column(name = "updated_at")
     private Instant updatedAt;
 
     static SerialNumberJpaEntity fromDomain(SerialNumber sn) {
         return new SerialNumberJpaEntity(
                 sn.getId(), sn.getSerial(), sn.getStatus(), sn.getProductId(),
-                sn.getEntryMovementId(), sn.getExitMovementId(), sn.getUpdatedAt()
+                sn.getEntryMovementId(), sn.getExitMovementId(), sn.getClientId(), sn.getUpdatedAt()
         );
     }
 
     SerialNumber toDomain() {
         return new SerialNumber(
                 id, serial, status, productId,
-                entryMovementId, exitMovementId, updatedAt
+                entryMovementId, exitMovementId, clientId, updatedAt
         );
     }
 }

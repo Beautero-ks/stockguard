@@ -15,6 +15,7 @@ public class SerialNumber {
     private final UUID productId;
     private final UUID entryMovementId;
     private UUID exitMovementId;
+    private UUID clientId;
     private Instant updatedAt;
 
     // Création (entrée en stock)
@@ -26,28 +27,31 @@ public class SerialNumber {
         this.productId = productId;
         this.entryMovementId = entryMovementId;
         this.exitMovementId = null;
+        this.clientId = null;
         this.updatedAt = Instant.now();
     }
 
     // Reconstruction (depuis la persistance)
     public SerialNumber(UUID id, String serial, SerialStatus status, UUID productId,
-                        UUID entryMovementId, UUID exitMovementId, Instant updatedAt) {
+                        UUID entryMovementId, UUID exitMovementId, UUID clientId, Instant updatedAt) {
         this.id = id;
         this.serial = serial;
         this.status = status;
         this.productId = productId;
         this.entryMovementId = entryMovementId;
         this.exitMovementId = exitMovementId;
+        this.clientId = clientId;
         this.updatedAt = updatedAt;
     }
 
     // Comportement : sortir du stock
-    void markAsSold(UUID exitMovementId) {
+    void markAsSold(UUID exitMovementId, UUID clientId) {
         if (this.status != SerialStatus.IN_STOCK) {
             throw new IllegalStateException("Le N° de série " + serial + " n'est pas en stock. Statut actuel : " + status);
         }
         this.status = SerialStatus.SOLD;
         this.exitMovementId = exitMovementId;
+        this.clientId = clientId;
         this.updatedAt = Instant.now();
     }
 

@@ -7,5 +7,6 @@ public record SerialNumberResponse(
         UUID id,
         String serial,
         String status,
+        UUID clientId,
         Instant updatedAt
 ) {}

@@ -77,11 +77,9 @@ public class StockApplicationService {
                 command.productId(),
                 command.userId(),
                 command.reason(),
-                serial
+                serial,
+                command.clientId()
         );
-
-        // TODO: Si clientId présent, on pourrait l'associer au SerialNumber pour la garantie
-        // Cette fonctionnalité sera complétée dans le module traceability
 
         StockMovement saved = stockRepository.saveMovement(movement);
 //        auditService.log(
@@ -106,7 +104,7 @@ public class StockApplicationService {
     private StockMovementResponse toResponse(StockMovement movement) {
         List<SerialNumberResponse> serials = movement.getSerialNumbers().stream()
                 .map(sn -> new SerialNumberResponse(sn.getId(), sn.getSerial(),
-                        sn.getStatus().name(), sn.getUpdatedAt()))
+                        sn.getStatus().name(), sn.getClientId(), sn.getUpdatedAt()))
                 .toList();
 
         return new StockMovementResponse(

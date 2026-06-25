@@ -26,10 +26,25 @@ class StockMovementTest {
         UUID productId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         SerialNumber serial = new SerialNumber("SN-001", productId, UUID.randomUUID());
-        serial.markAsSold(UUID.randomUUID()); // déjà vendu
+        serial.markAsSold(UUID.randomUUID(), null); // déjà vendu
 
         assertThatThrownBy(() -> StockMovement.createExit(productId, userId, "Vente", serial))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("n'est pas en stock");
+    }
+
+    @Test
+    void shouldAssociateClientOnExit() {
+        UUID productId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        UUID clientId = UUID.randomUUID();
+        SerialNumber serial = new SerialNumber("SN-001", productId, UUID.randomUUID());
+
+        StockMovement exit = StockMovement.createExit(productId, userId, "Vente", serial, clientId);
+
+        assertThat(exit.getQuantity()).isEqualTo(-1);
+        assertThat(serial.getStatus()).isEqualTo(SerialNumber.SerialStatus.SOLD);
+        assertThat(serial.getExitMovementId()).isEqualTo(exit.getId());
+        assertThat(serial.getClientId()).isEqualTo(clientId);
     }
 }

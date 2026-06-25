@@ -7,6 +7,7 @@ import dev.bops.stockguard.catalog.domain.Product;
 import dev.bops.stockguard.catalog.domain.ProductRepository;
 import dev.bops.stockguard.traceability.application.AuditService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class ProductApplicationService {
 
     private final ProductRepository productRepository;
     private final AuditService auditService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ProductResponse create(CreateProductCommand command) {
         // Validation métier : unicité de la référence
@@ -89,8 +91,7 @@ public class ProductApplicationService {
                 extractUserId(), "PRODUCT_DEACTIVATED", "Product", id,
                 "active=true", "active=false"
         );
-        // TODO: dans un second temps, dispatcher les domainEvents
-        // product.drainDomainEvents().forEach(eventPublisher::publish);
+        product.drainDomainEvents().forEach(eventPublisher::publishEvent);
     }
 
     // --- Mapper (pour l'instant manuel, on passera à MapStruct plus tard) ---
