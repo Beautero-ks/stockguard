@@ -1,0 +1,76 @@
+# docker-compose.prod.yml
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: stockguard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - stockguard-network
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /stockguard/postgres
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream: postgres
+
+  app:
+    image: ghcr.io/Beautero-ks/stockguard:latest
+    container_name: stockguard-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION}
+    ports:
+      - "9080:9080"
+    networks:
+      - stockguard-network
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /stockguard/app
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream: app
+
+  nginx:
+    image: nginx:alpine
+    container_name: stockguard-nginx
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - certbot_data:/var/www/certbot
+    networks:
+      - stockguard-network
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /stockguard/nginx
+        awslogs-region: ${AWS_REGION}
+        awslogs-stream: nginx
+
+volumes:
+  postgres_data:
+  certbot_data:
+
+networks:
+  stockguard-network:
+    driver: bridge

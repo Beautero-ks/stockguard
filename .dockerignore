@@ -1,0 +1,16 @@
+# Fichier .dockerignore à la racine
+target/classes/
+target/test-classes/
+target/surefire-reports/
+.git/
+.github/
+*.md
+.editorconfig
+.idea/
+.vscode/
+*.iml
+*.log
+.env
+.env.*
+docker-compose*.yml
+Dockerfile*

@@ -1,0 +1,61 @@
+# ============================================
+# Docker Compose - Environnement de Production
+# ============================================
+
+services:
+  # --- Base de Données ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: stockguard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-stockguard_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./src/main/resources/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-stockguard_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stockguard-network
+
+  # --- Application Spring Boot ---
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: stockguard:${TAG:-latest}
+    container_name: stockguard-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Profil Spring
+      SPRING_PROFILES_ACTIVE: prod
+      # Base de données
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-stockguard_db}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-postgres}
+      # JWT
+      APP_JWT_SECRET: ${JWT_SECRET:-!Fv=_q$oJ!vQFRvlUUo^$f:5<34wCGYARX<nW=4ofNz}
+      APP_JWT_EXPIRATION_MS: ${JWT_EXPIRATION:-86400000}
+    ports:
+      - "9080:9080"
+    networks:
+      - stockguard-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  stockguard-network:
+    driver: bridge

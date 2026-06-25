@@ -1,0 +1,69 @@
+# =============================================
+# StockGuard - Configuration Principale
+# =============================================
+server:
+  port: 9080
+  servlet:
+    context-path: /api
+  # Bonne pratique : activer la compression des réponses HTTP
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html
+
+spring:
+  application:
+    name: stockguard
+
+  # --- Base de Données ---
+  datasource:
+    url: jdbc:postgresql://localhost:5432/stockguard_db
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+    hikari:  # HikariCP est le pool par défaut, on configure ses paramètres
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: StockGuardPool # Nom explicite pour le monitoring
+
+  # --- JPA / Hibernate ---
+  jpa:
+    hibernate:
+      ddl-auto: update  # On garde le contrôle du schéma via nos scripts SQL
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # Bonne pratique : utiliser des types SQL standards
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+# --- Logging (Racine !) ---
+logging:
+  level:
+    root: WARN  # On ne veut pas le bruit des librairies externes
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG  # Utile pour débugger la sécurité
+    org.hibernate.SQL: DEBUG  # Log les requêtes SQL paramétrées
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # Log les valeurs des paramètres SQL (TRACE justifié ici)
+    com.stockguard: DEBUG  # CORRIGÉ
+
+# --- Actuator (Racine !) ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include:  # CORRIGÉ : liste YAML
+          - health
+          - info
+          - metrics
+  endpoint:
+    health:
+      show-details: ALWAYS  # Pratique en dev, à passer à "when-authorized" en prod
+  metrics:
+    tags:
+      application: ${spring.application.name}  # Tag global pour toutes les métriques
