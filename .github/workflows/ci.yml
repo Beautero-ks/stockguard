@@ -45,7 +45,7 @@ jobs:
           PGPASSWORD: ${{ secrets.CI_DB_PASSWORD }}
 
       - name: Build with Maven
-        run: mvn clean verify -Dspring.profiles.active=test
+        run: mvn clean verify -Dspring.profiles.active=test -Dspring-boot.repackage.layers.enabled=true
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/stockguard_test
           SPRING_DATASOURCE_USERNAME: postgres
